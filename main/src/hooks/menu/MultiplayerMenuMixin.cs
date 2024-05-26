@@ -22,17 +22,105 @@ public class MultiplayerMenuMixin {
         On.Menu.MultiplayerMenu.InitiateGameTypeSpecificButtons += MultiplayerMenu_InitiateGameTypeSpecificButtons;
         On.Menu.MultiplayerMenu.Update += MultiplayerMenu_Update;
         On.Menu.Menu.Update += Menu_Update; //I AM NOT ABOVE RESORTING TO MILITARY GRADE SHENANGIANS TO AVOID WRITING IL HOOKS
+        //IL.Menu.MultiplayerMenu.Update += MultiplayerMenu_Update1;
+    }
+
+    //WE'LL COME BACK TO THIS... MAYBE..
+    private void MultiplayerMenu_Update1(MonoMod.Cil.ILContext il) {
+        /*var cursor = new ILCursor(il);
+        var x = 0;
+
+        if (!cursor.TryGotoNext(MoveType.After,
+            //i => i.MatchLdarg(0),
+            //i => i.MatchLdcI4(4)
+            i => i.MatchStloc(4)
+        )) {
+            throw new Exception("Failed to match IL for MENU UPDATE!");
+        }
+
+        cursor.EmitDelegate((int oldNum) => {
+            return 4;
+        });
+
+
+        while (cursor.TryGotoNext(MoveType.After,
+            //i => i.MatchLdarg(0),
+            //i => i.MatchLdcI4(4)
+            i => i.MatchStloc(4)
+        )) {
+            x++;
+            //cursor.Emit(OpCodes.Ldloc, player); //THESE LIKE, BECOME ARGUMENTS WITHIN EMITDELEGATE  I THINK?
+            //cursor.Emit(OpCodes.Ldloc, k);
+
+            //cursor.EmitDelegate((float rad, Player player, int k) =>
+            cursor.EmitDelegate((int oldNum) => {
+                return 4;
+            });
+            break;
+        }
+
+        Logger.LogInfo("TESTMYSLUGCAT IL LINES ADDED! " + x);
+        */
+
+
+        /*
+        var cursor = new ILCursor(il);
+
+        if (!cursor.TryGotoNext(MoveType.After,
+            i => i.Matchldloc(6),
+
+
+
+            i => i.MatchLdarg(0),
+            i => i.MatchCallOrCallvirt<PhysicalObject>("get_bodyChunks"),
+            i => i.MatchLdcI4(0),
+            i => i.MatchLdelemRef(),
+            i => i.MatchLdflda<BodyChunk>(nameof(BodyChunk.vel)),
+            i => i.MatchLdflda<Vector2>(nameof(Vector2.y)),
+            i => i.MatchDup(),
+            i => i.MatchLdindR4(),
+            i => i.MatchLdarg(0),
+            i => i.MatchCallOrCallvirt<PhysicalObject>("get_EffectiveRoomGravity"),
+            i => i.MatchSub(),
+            i => i.MatchStindR4())) {
+            throw new Exception("Couldn't match in whatever hook this is");
+        }
+
+        var label = il.DefineLabel();
+        cursor.MarkLabel(label);
+
+        if (!cursor.TryGotoPrev(MoveType.Before,
+            i => i.MatchLdarg(0),
+            i => i.MatchLdsfld<Player.AnimationIndex>(nameof(Player.AnimationIndex.None)),
+            i => i.MatchStfld<Player>(nameof(Player.animation)))) {
+            throw new Exception("Couldn't match whatever bla bla bla error you can recognize later");
+        } else
+            BellyPlus.Logger.LogInfo("PB PLAYERMOVEMENT IL ADDED! ");
+
+        cursor.Emit(OpCodes.Br, label);
+
+        */
+
+        /*
+		we get a label to the end
+		then move back to the start
+		and emit a br
+		which tells the code to skip to that label no matter what 
+		(br stands for branch)
+		this is the same as putting an if (false) { } around the code
+		br is the same as a goto in C#
+		*/
     }
 
     private void Menu_Update(On.Menu.Menu.orig_Update orig, Menu.Menu self) {
-        if (self.manager?.arenaSetup?.playersJoined?.Length != MyriadMod.plyCnt && arenaPlrsMemory!= null)
+        if (self.manager?.arenaSetup?.playersJoined != null && self.manager?.arenaSetup?.playersJoined?.Length != MyriadMod.plyCnt && arenaPlrsMemory!= null)
             self.manager.arenaSetup.playersJoined = arenaPlrsMemory;
         orig(self);
     }
 
     bool btnHeld = false;
     private void MultiplayerMenu_Update(On.Menu.MultiplayerMenu.orig_Update orig, MultiplayerMenu self) {
-
+        
         if (!self.requestingControllerConnections && !self.exiting) {
             for (int i = 1; i < self.manager.arenaSetup.playersJoined.Length; i++) {
                 PlayerHandler playerHandler = self.manager.rainWorld.GetPlayerHandler(i);
@@ -54,34 +142,25 @@ public class MultiplayerMenuMixin {
         }
         orig(self);
         //self.manager.arenaSetup.playersJoined = arenaPlrsMemory; //WE NEED THIS BEFORE THEN! BUT WE'LL CATCH IT IN THE BASE.UPDATE...
-
-
-
-        bool pressedBtn = false;
-        //Profiles.Profile profile = self.manager.rainWorld.playerHandler.profile;
-        Profiles.Profile profile = self.manager.rainWorld.GetPlayerHandler(0).profile; //PRETTY SURE WE WANT PLAYER 1
-        //if (Input.GetKey((KeyCode) 324) || (profile != null && UserInput.GetButton(profile, "UICancel"))) { //"Take"
-        if (Input.GetKey((KeyCode) 324) || (profile != null && UserInput.GetRewiredPlayer(profile, 0).GetButton(9))) { //9 = UICancel
-            if (!btnHeld)
-                pressedBtn = true;
-            btnHeld = true;
-        } else {
-            btnHeld = false;
-        }
-
-        if (self.playerClassButtons != null) {
-            for (int k = 0; k < self.playerClassButtons.Length; k++) {
-                if (self.playerClassButtons[k].Selected && pressedBtn) {
-                    self.GetArenaSetup.playerClass[k] = JollySlidingMenuMixin.PrevClass(self.GetArenaSetup.playerClass[k], "arena", self.manager.rainWorld);
-                    self.GetArenaSetup.playerClass[k] = JollySlidingMenuMixin.PrevClass(self.GetArenaSetup.playerClass[k], "arena", self.manager.rainWorld);
-                    self.Singal(self.playerClassButtons[k], "CLASSCHANGE" + k.ToString());
-                }
-            }
-        }
+        
     }
 
     //OKAY WEIRD BUT WE A DEFINITELY DUPLICATING MENU OBJECTS WHEN SWITCHING BETWEEN ARENA MODES WHILE MSC IS DISABLED...
     private void MultiplayerMenu_InitiateGameTypeSpecificButtons(On.Menu.MultiplayerMenu.orig_InitiateGameTypeSpecificButtons orig, MultiplayerMenu self) {
+        
+        //TEMPORARY DETOUR UNTIL WE FIX THE COMPETITIVE MODE...
+        if (self.currentGameType == ArenaSetup.GameTypeID.Competitive) {
+            self.currentGameType = self.GetArenaSetup.CycleGameType(1);
+            self.nextGameType = self.currentGameType;
+        }
+
+        if (self.nextGameType == ArenaSetup.GameTypeID.Competitive) {
+            if (self.currentGameType == ArenaSetup.GameTypeID.Sandbox)
+                self.nextGameType = self.GetArenaSetup.CycleGameType(-1);
+            else
+                self.nextGameType = self.GetArenaSetup.CycleGameType(1);
+        }
+        
         orig(self);
 
         var plyCnt = MyriadMod.PlyCnt();

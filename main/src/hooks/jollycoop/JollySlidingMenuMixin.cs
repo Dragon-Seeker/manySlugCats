@@ -309,7 +309,9 @@ public class JollySlidingMenuMixin {
 					bool swapPup = self.JollyOptions(i).isPup != self.JollyOptions(i-1).isPup;
                     //DON'T MIX UP PLAYER NUMBER. ESPECIALLY BECAUSE PLAYER 1 IS ALWAYS FORCE ENABLED
                     Custom.rainWorld.options.jollyPlayerOptionsArray[i].playerNumber = jOptA.playerNumber;
-                    Custom.rainWorld.options.jollyPlayerOptionsArray[i - 1].playerNumber = jOptB.playerNumber;
+                    //Custom.rainWorld.options.jollyPlayerOptionsArray[i - 1].playerNumber = jOptB.playerNumber; 
+                    //THIS DOESN'T WORK? jOptA.playerNumber AND jOptB.playerNumber ARE BOTH THE SAME NUMBER?... OK UH.. JUST SUBTRACT 1 THEN I GUESS
+                    Custom.rainWorld.options.jollyPlayerOptionsArray[i - 1].playerNumber = jOptA.playerNumber - 1;
 
                     self.SetPortraitsDirty(); //REFRESH THE PORTRAITS!
                     self.playerSelector[i].dirty = true;
